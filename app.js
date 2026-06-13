@@ -90,10 +90,10 @@ window.addEventListener('DOMContentLoaded', () => {
 function init3D() {
   const container = document.getElementById('canvas-container');
   
-  // Scene setup with dark apocalyptic sky and thick ash fog
+  // Scene setup with a brighter, dusty apocalyptic sky and realistic fog
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x130e0b); // Dark ash-brown sky background
-  scene.fog = new THREE.FogExp2(0x130e0b, 0.024); // Thick volumetric nuclear winter fog
+  scene.background = new THREE.Color(0x352d26); // Lighter, dusty warm-grey sky background
+  scene.fog = new THREE.FogExp2(0x352d26, 0.015); // Realistic overcast nuclear winter fog (density 0.015)
 
   // Camera setup
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -292,7 +292,7 @@ function createEnvironment() {
       // Broad ambient sky glow
       float sunBloom = pow(sunInfluence, 2.5) * 0.1;
       
-      vec3 sunColor = vec3(0.85, 0.22, 0.1); // blood-red nuclear sun
+      vec3 sunColor = vec3(0.95, 0.55, 0.25); // pale warm orange/gold sun
       vec3 finalColor = skyColor + sunColor * (sunDisk + sunHalo + sunBloom);
       
       gl_FragColor = vec4(finalColor, 1.0);
@@ -304,8 +304,8 @@ function createEnvironment() {
     vertexShader: skyVertexShader,
     fragmentShader: skyFragmentShader,
     uniforms: {
-      topColor: { value: new THREE.Color(0x060608) },      // Pitch black zenith
-      bottomColor: { value: new THREE.Color(0x1a0f0a) },   // Glimmering amber/red horizon
+      topColor: { value: new THREE.Color(0x221d1a) },      // Soft dark-grey/brown zenith
+      bottomColor: { value: new THREE.Color(0x5a483e) },   // Warm amber/grey horizon
       offset: { value: 25.0 },
       exponent: { value: 0.6 },
       sunPosition: { value: new THREE.Vector3(60, 120, 30) }
@@ -373,9 +373,9 @@ function createEnvironment() {
   const sunGlowTexture = new THREE.CanvasTexture(sunGlowCanvas);
   const sunSpriteMat = new THREE.SpriteMaterial({
     map: sunGlowTexture,
-    color: 0xc23d1b, // blood-red sun color
+    color: 0xe05a36, // brighter orange-red sun color
     transparent: true,
-    opacity: 0.45,
+    opacity: 0.65, // slightly more intense
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
@@ -385,12 +385,12 @@ function createEnvironment() {
   sunSprite.scale.set(150, 150, 1);
   scene.add(sunSprite);
 
-  // 4. Hemisphere Ambient Light (Dark Steel-Blue to Ash-Brown bounce)
-  const ambientLight = new THREE.HemisphereLight(0x2c3540, 0x1a1510, 0.25);
+  // 4. Hemisphere Ambient Light (Realistic Steel-Grey sky to Warm Soil bounce)
+  const ambientLight = new THREE.HemisphereLight(0x505b6b, 0x302822, 0.75); // Increased to 0.75 for realistic, bright ambient fills
   scene.add(ambientLight);
 
-  // 5. Overcast Sun Directional Light (Dim blood-red shadows)
-  const dirLight = new THREE.DirectionalLight(0xc23d1b, 0.6);
+  // 5. Overcast Sun Directional Light (Bright warm amber shadows)
+  const dirLight = new THREE.DirectionalLight(0xe5aa7a, 1.3); // Warm amber sunlight, increased to 1.3
   dirLight.position.set(60, 120, 30);
   dirLight.castShadow = true;
   dirLight.shadow.mapSize.width = 2048;
@@ -431,12 +431,12 @@ function createEnvironment() {
   // 7. Ground Plane with Cracked, Dusty Dark PBR Asphalt Material
   const floorGeo = new THREE.PlaneGeometry(1200, 1200);
   const floorMat = new THREE.MeshStandardMaterial({
-    color: 0x151517,            // Cracked slate dark gray
+    color: 0x2b2b2f,            // Lighter, realistic warm slate gray
     map: colorMap,
     bumpMap: bumpMap,
-    bumpScale: 0.18,            // pronounced crack relief
+    bumpScale: 0.1,             // subtle, realistic crack depth (less harsh shadows)
     roughnessMap: roughnessMap,
-    roughness: 0.85,            // matte, dusty feel
+    roughness: 0.8,             // matte dust feel
     metalness: 0.05,            // non-metallic dirt/ash
   });
   const floor = new THREE.Mesh(floorGeo, floorMat);
