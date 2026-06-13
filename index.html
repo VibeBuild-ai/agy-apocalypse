@@ -343,6 +343,112 @@
       overflow-x: auto;
       margin-top: 1rem;
     }
+
+    /* Mobile Virtual Controls styling */
+    #mobile-controls {
+      display: none;
+      position: absolute;
+      bottom: 25px;
+      left: 0;
+      width: 100%;
+      padding: 0 20px;
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .left-group {
+      align-items: center;
+    }
+
+    .right-group {
+      align-items: flex-end;
+    }
+
+    .ctrl-btn {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(13, 14, 18, 0.85);
+      border: 2px solid var(--color-cyan);
+      color: var(--color-cyan);
+      font-size: 1.4rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+
+    .ctrl-btn:active {
+      background: var(--color-cyan) !important;
+      color: #0d0e12 !important;
+      transform: scale(0.92);
+      box-shadow: 0 0 25px var(--color-cyan);
+    }
+
+    .drift-btn {
+      width: 80px;
+      height: 55px;
+      border-radius: 12px;
+      border-color: var(--color-purple);
+      color: var(--color-purple);
+      font-size: 0.8rem;
+      box-shadow: 0 0 15px rgba(177, 82, 255, 0.15);
+    }
+
+    .drift-btn:active {
+      background: var(--color-purple) !important;
+      color: #fff !important;
+      box-shadow: 0 0 25px var(--color-purple);
+    }
+
+    .gas-btn {
+      width: 76px;
+      height: 76px;
+      font-size: 0.95rem;
+    }
+
+    .brake-btn {
+      width: 68px;
+      height: 68px;
+      font-size: 0.85rem;
+      border-color: #ff0844;
+      color: #ff0844;
+      box-shadow: 0 0 15px rgba(255, 8, 68, 0.15);
+    }
+
+    .brake-btn:active {
+      background: #ff0844 !important;
+      color: #fff !important;
+      box-shadow: 0 0 25px #ff0844;
+    }
+
+    /* Adjust HUD positioning on mobile to prevent overlaps */
+    @media (max-width: 768px) {
+      .hud {
+        padding: 0.5rem !important;
+      }
+      #hud-bottom {
+        display: none !important; /* Hide keyboard help on mobile */
+      }
+      #proximity-hud {
+        bottom: 7.5rem !important; /* Lift proximity card above controls */
+      }
+    }
   </style>
 </head>
 <body>
@@ -444,6 +550,21 @@
       </div>
       <div class="modal-body" id="modal-body">
         <!-- Will be filled dynamically based on clicked monument -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Virtual Controls -->
+  <div id="mobile-controls">
+    <div class="control-group left-group">
+      <button id="btn-left" class="ctrl-btn">◀</button>
+      <button id="btn-right" class="ctrl-btn">▶</button>
+    </div>
+    <div class="control-group right-group">
+      <button id="btn-drift" class="ctrl-btn drift-btn">DRIFT</button>
+      <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+        <button id="btn-gas" class="ctrl-btn gas-btn">GAS</button>
+        <button id="btn-brake" class="ctrl-btn brake-btn">BRAKE</button>
       </div>
     </div>
   </div>

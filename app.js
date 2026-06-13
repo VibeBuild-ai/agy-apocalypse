@@ -8,6 +8,7 @@ const monuments = [];
 const columns = [];
 let targetMonument = null;
 let isModalOpen = false;
+const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
 // Proximity HUD Tracking
 let activePillarIndex = -1;
@@ -158,9 +159,15 @@ function createCircleTexture() {
 
 // Setup Keyboard, Mouse & Pointer Lock Events
 function setupEvents() {
-  // Click instructions to lock pointer
+  // Click instructions to lock pointer (or start game directly on mobile)
   instructions.addEventListener('click', () => {
-    document.body.requestPointerLock();
+    if (isMobile) {
+      blocker.style.opacity = '0';
+      setTimeout(() => { blocker.style.display = 'none'; }, 500);
+      isModalOpen = false;
+    } else {
+      document.body.requestPointerLock();
+    }
   });
 
   // Track pointer lock state changes
@@ -170,7 +177,7 @@ function setupEvents() {
       setTimeout(() => { blocker.style.display = 'none'; }, 500);
       isModalOpen = false;
     } else {
-      if (!isModalOpen) {
+      if (!isMobile && !isModalOpen) { // Don't enforce pointerlock on mobile
         blocker.style.display = 'flex';
         setTimeout(() => { blocker.style.opacity = '1'; }, 10);
       }
@@ -242,12 +249,63 @@ function setupEvents() {
     }
   });
 
-  // Mouse Click Handler for Interaction
-  document.addEventListener('click', () => {
-    if (document.pointerLockElement === document.body && targetMonument && !isModalOpen) {
-      openDetailModal(targetMonument);
+  // Mouse Click / Mobile Tap Handler for Interaction (Supports locked pointer and mobile taps)
+  document.addEventListener('click', (e) => {
+    // If pointer is locked, use targetMonument (center raycast)
+    if (document.pointerLockElement === document.body) {
+      if (targetMonument && !isModalOpen) {
+        openDetailModal(targetMonument);
+      }
+      return;
+    }
+    
+    // If pointer is NOT locked (e.g. mobile or free cursor)
+    if (e.target.closest('#mobile-controls') || e.target.closest('.hud-card') || e.target.closest('.modal-card') || isModalOpen) {
+      return;
+    }
+    
+    const mouse = new THREE.Vector2(
+      (e.clientX / window.innerWidth) * 2 - 1,
+      -(e.clientY / window.innerHeight) * 2 + 1
+    );
+    
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+    
+    let closestIntersect = null;
+    let detectedMonument = null;
+    
+    // 1. Scan monuments
+    monuments.forEach(m => {
+      const intersects = raycaster.intersectObjects(m.mesh.children, true);
+      if (intersects.length > 0) {
+        const dist = intersects[0].distance;
+        if (dist < 35 && (!closestIntersect || dist < closestIntersect.distance)) {
+          closestIntersect = intersects[0];
+          detectedMonument = m;
+        }
+      }
+    });
+    
+    // 2. Scan columns
+    columns.forEach(c => {
+      const intersects = raycaster.intersectObjects(c.mesh.children, true);
+      if (intersects.length > 0) {
+        const dist = intersects[0].distance;
+        if (dist < 35 && (!closestIntersect || dist < closestIntersect.distance)) {
+          closestIntersect = intersects[0];
+          detectedMonument = c;
+        }
+      }
+    });
+    
+    if (detectedMonument) {
+      openDetailModal(detectedMonument);
     }
   });
+
+  // Setup Virtual touch buttons and camera look-around for mobile
+  setupMobileControls();
 
   // Modal Close Events
   modalCloseBtn.addEventListener('click', closeDetailModal);
@@ -1208,8 +1266,8 @@ function animate() {
 
 // Calculate player movements and collisions (Driving physics & Follow camera)
 function updateMovement(delta) {
-  // Only process keyboard inputs when pointer is locked and modal is closed
-  const activeControl = (document.pointerLockElement === document.body) && !isModalOpen;
+  // Only process keyboard inputs when pointer is locked and modal is closed (or mobile control active)
+  const activeControl = (document.pointerLockElement === document.body || isMobile) && !isModalOpen;
   
   // 1. Acceleration & Braking Physics
   if (activeControl) {
@@ -1647,7 +1705,7 @@ function updateLensFlare() {
   const container = document.getElementById('lens-flare-container');
   if (!container) return;
 
-  if (isModalOpen || document.pointerLockElement !== document.body) {
+  if (isModalOpen || (!isMobile && document.pointerLockElement !== document.body)) {
     container.style.display = 'none';
     return;
   }
@@ -2167,6 +2225,102 @@ function updateSkidmarks(delta) {
     const lifeRatio = skid.age / skid.maxAge;
     skid.material.opacity = 0.55 * (1.0 - lifeRatio);
   });
+}
+
+// 20. Setup Mobile Virtual Touch Controllers & Camera Look-around
+function setupMobileControls() {
+  const mobileControls = document.getElementById('mobile-controls');
+  if (!mobileControls) return;
+  
+  if (isMobile) {
+    // Show the mobile controls container
+    mobileControls.style.display = 'flex';
+    
+    // Customize startup screen text for mobile users
+    const instructions = document.getElementById('instructions');
+    if (instructions) {
+      instructions.innerHTML = `
+        <h1 style="color:#00f2fe; text-shadow:0 0 10px rgba(0,242,254,0.5); font-size:1.8rem; margin-bottom:1rem;">APOCALYPSE DRIVE</h1>
+        <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:1.5rem; font-family:'Roboto Mono',monospace;">[MOBILE VERSION]</p>
+        <div style="font-size:0.85rem; color:#f8fafc; text-align:left; display:inline-block; margin:0 auto 1.5rem auto; line-height:1.8; font-family:'Poppins',sans-serif;">
+          <div>• <b>Virtuelle Tasten</b> zum Lenken &amp; Fahren</div>
+          <div>• <b>Wischen</b> auf dem Screen zum Umsehen</div>
+          <div>• <b>Tippen auf Monumente</b> für Detail-Infos</div>
+        </div>
+        <button class="start-btn" style="width:100%; border:2px solid #00f2fe; background:rgba(0,242,254,0.1); color:#00f2fe; padding:12px; font-weight:bold; border-radius:8px; cursor:pointer; font-family:'Roboto Mono',monospace; box-shadow:0 0 15px rgba(0,242,254,0.2);">SPIEL STARTEN</button>
+      `;
+    }
+
+    // Helper function to bind touch events to keys state
+    const bindTouch = (id, key) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        keys[key] = true;
+      }, { passive: false });
+      
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        keys[key] = false;
+      }, { passive: false });
+      
+      btn.addEventListener('touchcancel', (e) => {
+        e.preventDefault();
+        keys[key] = false;
+      }, { passive: false });
+    };
+
+    // Bind virtual buttons to driving keys
+    bindTouch('btn-left', 'a');
+    bindTouch('btn-right', 'd');
+    bindTouch('btn-gas', 'w');
+    bindTouch('btn-brake', 's');
+    bindTouch('btn-drift', 'shift');
+
+    // Drag-to-look camera controls for mobile
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let isDragging = false;
+
+    window.addEventListener('touchstart', (e) => {
+      // Avoid starting camera look-around if clicking UI elements or modals
+      if (e.target.closest('.ctrl-btn') || e.target.closest('.modal-card') || e.target.closest('#proximity-hud') || isModalOpen) {
+        return;
+      }
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        isDragging = true;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isDragging || isModalOpen || e.touches.length === 0) return;
+
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - lastTouchX;
+      const deltaY = touch.clientY - lastTouchY;
+
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+
+      // Rotate camera
+      const sensitivity = 0.005;
+      yaw -= deltaX * sensitivity;
+      pitch -= deltaY * sensitivity;
+
+      // Clamp camera orbit rotation
+      yaw = Math.max(-Math.PI / 1.5, Math.min(Math.PI / 1.5, yaw));
+      pitch = Math.max(-0.25, Math.min(Math.PI / 5, pitch));
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+    }, { passive: true });
+  }
 }
 
 
