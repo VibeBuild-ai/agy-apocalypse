@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Antigravity CLI - Immersive 3D Walkable Landing Page. Erkunde die Features in einer dreidimensionalen digitalen Welt.">
+  <title>Antigravity CLI - 3D Walkable Universe</title>
+  
+  <!-- Poppins & Roboto Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Roboto+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-obsidian: rgba(13, 14, 18, 0.85);
+      --bg-obsidian-solid: #0d0e12;
+      --border-cyan: rgba(0, 242, 254, 0.25);
+      --border-cyan-active: rgba(0, 242, 254, 0.6);
+      --text-glow: 0 0 10px rgba(0, 242, 254, 0.5);
+      --box-glow: 0 0 25px rgba(0, 242, 254, 0.15);
+      --color-cyan: #00f2fe;
+      --color-purple: #b152ff;
+      --color-gray: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #050508;
+      font-family: 'Poppins', sans-serif;
+      color: #f8fafc;
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 2.2s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Crosshair for targeting */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      border: 2px solid rgba(0, 242, 254, 0.7);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10;
+      transition: all 0.2s ease;
+    }
+
+    #crosshair.active {
+      width: 14px;
+      height: 14px;
+      background: rgba(0, 242, 254, 0.2);
+      border-color: #00f2fe;
+      box-shadow: 0 0 10px var(--color-cyan);
+    }
+
+    /* Screen Overlay Blocker */
+    #blocker {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(5, 5, 8, 0.9);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      transition: opacity 0.5s ease;
+    }
+
+    #instructions {
+      background: var(--bg-obsidian-solid);
+      border: 1px solid var(--border-cyan);
+      border-radius: 16px;
+      padding: 3rem;
+      text-align: center;
+      max-width: 600px;
+      box-shadow: var(--box-glow);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #instructions:hover {
+      border-color: var(--border-cyan-active);
+      box-shadow: 0 0 35px rgba(0, 242, 254, 0.25);
+    }
+
+    #instructions h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #00f2fe 0%, #b152ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    #instructions p {
+      color: var(--color-gray);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .start-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+      color: #070913;
+      padding: 0.85rem 2.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 242, 254, 0.5);
+    }
+
+    /* HUD elements (z-index: 10) */
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+      padding: 1.5rem;
+    }
+
+    .hud-card {
+      background: var(--bg-obsidian);
+      border: 1px solid var(--border-cyan);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--box-glow);
+      pointer-events: auto;
+    }
+
+    .hud-title {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      color: var(--color-cyan);
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+      text-shadow: var(--text-glow);
+    }
+
+    .hud-text {
+      font-size: 0.9rem;
+      color: #ffffff;
+    }
+
+    #hud-top-left {
+      top: 1.5rem;
+      left: 1.5rem;
+    }
+
+    #hud-top-right {
+      top: 1.5rem;
+      right: 1.5rem;
+    }
+
+    #hud-bottom {
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: auto;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    /* Monument Interaction Target HUD */
+    #target-info {
+      position: absolute;
+      top: 25%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .target-box {
+      background: rgba(13, 14, 18, 0.95);
+      border: 2px solid var(--color-cyan);
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+    }
+
+    .target-box h3 {
+      color: var(--color-cyan);
+      font-size: 1.1rem;
+      margin-bottom: 0.2rem;
+      text-shadow: var(--text-glow);
+    }
+
+    .target-box p {
+      color: var(--color-gray);
+      font-size: 0.8rem;
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    /* Modal / Popups (z-index: 30) */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 5, 8, 0.8);
+      backdrop-filter: blur(6px);
+      z-index: 30;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--bg-obsidian-solid);
+      border: 1px solid var(--color-cyan);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 650px;
+      padding: 2.5rem;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), var(--box-glow);
+      transform: translateY(20px);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.open .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 1rem;
+    }
+
+    .modal-header h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--color-gray);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-color: var(--color-cyan);
+    }
+
+    .modal-body {
+      font-size: 1rem;
+      color: #e2e8f0;
+      line-height: 1.7;
+    }
+
+    .modal-body p {
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-body ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--color-gray);
+    }
+
+    .modal-body li {
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-code {
+      background: #07080a;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.85rem;
+      color: #38ef7d;
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Real-time Sun Lens Flare Overlay -->
+  <div id="lens-flare-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; display: none; overflow: hidden;">
+    <div class="lens-flare" id="flare-sun" style="position: absolute; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(255,252,240,0.85) 0%, rgba(255,220,130,0.25) 30%, rgba(255,170,80,0.08) 55%, rgba(255,170,80,0) 70%); transform: translate(-50%, -50%); mix-blend-mode: screen; filter: blur(4px);"></div>
+    <div class="lens-flare" id="flare-1" style="position: absolute; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(255,200,120,0.18) 0%, rgba(255,160,80,0.06) 50%, rgba(255,110,60,0) 70%); border: 1px solid rgba(255,230,170,0.12); transform: translate(-50%, -50%); mix-blend-mode: screen; filter: blur(1px);"></div>
+    <div class="lens-flare" id="flare-2" style="position: absolute; width: 75px; height: 75px; border-radius: 50%; background: radial-gradient(circle, rgba(180,90,255,0.22) 0%, rgba(110,60,255,0.06) 65%, rgba(110,60,255,0) 85%); transform: translate(-50%, -50%); mix-blend-mode: screen;"></div>
+    <div class="lens-flare" id="flare-3" style="position: absolute; width: 35px; height: 35px; border-radius: 50%; background: rgba(0,245,255,0.4); box-shadow: 0 0 20px rgba(0,245,255,0.6); transform: translate(-50%, -50%); mix-blend-mode: screen;"></div>
+    <div class="lens-flare" id="flare-4" style="position: absolute; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.0) 45%, rgba(255,235,170,0.09) 60%, rgba(255,210,120,0) 75%); border: 2px solid rgba(255,210,120,0.05); transform: translate(-50%, -50%); mix-blend-mode: screen; filter: blur(2px);"></div>
+    <div class="lens-flare" id="flare-5" style="position: absolute; width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle, rgba(255,110,110,0.14) 0%, rgba(255,60,60,0.04) 50%, rgba(255,60,60,0) 70%); transform: translate(-50%, -50%); mix-blend-mode: screen;"></div>
+  </div>
+
+  <!-- Target Dot (Crosshair) -->
+  <div id="crosshair"></div>
+
+  <!-- Blocker Screen (Start / Instructions) -->
+  <div id="blocker">
+    <div id="instructions">
+      <h1>ANTIGRAVITY CLI</h1>
+      <p style="font-size: 1.1rem; color: #fff; margin-bottom: 0.75rem;">3D WALKABLE ARCHIVER UNIVERSE</p>
+      <p>
+        Willkommen in der 3D-Präsentation der Antigravity CLI. Erkunden Sie eine dreidimensionale Cyberpunk-Welt und interagieren Sie mit den Monumenten, um mehr über unsere Entwicklungsfeatures zu erfahren.
+      </p>
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 1.25rem; margin-bottom: 2rem; text-align: left; font-family: 'Roboto Mono', monospace; font-size: 0.85rem;">
+        <div style="margin-bottom: 0.5rem; color: var(--color-cyan);"><span style="color:#fff;">Steuerung:</span></div>
+        <div>• <b style="color:#fff;">W / S</b>: Gas geben / Bremsen &amp; Rückwärts</div>
+        <div>• <b style="color:#fff;">A / D</b>: Auto lenken (Kurven fahren)</div>
+        <div>• <b style="color:#fff;">SHIFT gedrückt halten</b>: Handbremse / Driften</div>
+        <div>• <b style="color:#fff;">Maus bewegen</b>: Umsehen (Kamera schwenken)</div>
+        <div>• <b style="color:#fff;">Linksklick (bei Fokus)</b>: Details öffnen</div>
+        <div>• <b style="color:#fff;">ESC-Taste</b>: Steuerung freigeben</div>
+      </div>
+      <button class="start-btn">FAHRZEUG STARTEN</button>
+    </div>
+  </div>
+
+  <!-- HUD: Top Left -->
+  <div class="hud" id="hud-top-left">
+    <div class="hud-card">
+      <div class="hud-title">System Link</div>
+      <div class="hud-text" style="font-family: 'Roboto Mono', monospace; font-weight: 500;">ANTIGRAVITY_NODE_01</div>
+    </div>
+  </div>
+
+  <!-- HUD: Top Right -->
+  <div class="hud" id="hud-top-right">
+    <div class="hud-card" style="text-align: right;">
+      <div class="hud-title">Diagnostics</div>
+      <div class="hud-text" style="font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: var(--color-purple);">FpS: 60 | LATENCY: 12ms</div>
+      <div class="hud-text" id="hud-nodes" style="font-family: 'Roboto Mono', monospace; font-size: 0.9rem; color: var(--color-cyan); margin-top: 0.25rem; font-weight: 700; text-shadow: var(--text-glow);">KNOTEN GEFUNDEN: 0 / 4</div>
+    </div>
+  </div>
+
+  <!-- HUD: Bottom Help (Driving Instructions) -->
+  <div class="hud" id="hud-bottom">
+    <div class="hud-card" style="background: rgba(13, 14, 18, 0.9); border-color: rgba(255,255,255,0.08);">
+      <div class="hud-text" style="font-size: 0.8rem; font-family: 'Roboto Mono', monospace; color: var(--color-gray);">
+        <span style="color: var(--color-cyan);">[W/S]</span> Beschleunigen/Bremsen &nbsp;|&nbsp; 
+        <span style="color: var(--color-cyan);">[A/D]</span> Lenken &nbsp;|&nbsp; 
+        <span style="color: var(--color-cyan);">[SHIFT]</span> Driften &nbsp;|&nbsp; 
+        <span style="color: var(--color-cyan);">[Maus]</span> Umsehen &nbsp;|&nbsp; 
+        <span style="color: var(--color-cyan);">[Klick]</span> Interaktion
+      </div>
+    </div>
+  </div>
+
+  <!-- HUD Target Popup -->
+  <div id="target-info">
+    <div class="target-box">
+      <h3 id="target-name">Monument</h3>
+      <p id="target-action">KLICKEN ZUM AKTIVIEREN</p>
+    </div>
+  </div>
+
+  <!-- Proximity HUD Box for Glass Pillars -->
+  <div id="proximity-hud" style="position: absolute; bottom: 6rem; left: 50%; transform: translate(-50%, 20px); width: 90%; max-width: 500px; z-index: 15; pointer-events: none; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: none;">
+    <div class="hud-card" style="border: 2px solid var(--color-cyan); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2); pointer-events: auto; background: rgba(10, 12, 22, 0.95); text-align: left; padding: 1.25rem 1.5rem;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+        <span class="hud-title" id="proximity-title" style="font-size: 0.95rem; margin: 0;">Feature Name</span>
+        <span style="font-size: 0.7rem; color: var(--color-cyan); font-family: 'Roboto Mono', monospace; border: 1px solid var(--color-cyan); padding: 2px 8px; border-radius: 4px; font-weight: bold; background: rgba(0, 242, 254, 0.1);">TRANSCEIVER ACTIVE</span>
+      </div>
+      <div id="proximity-content" style="font-size: 0.85rem; color: #e2e8f0; line-height: 1.6; font-family: 'Poppins', sans-serif;">
+        Detail text here...
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modals -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-title">Feature Details</h2>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Will be filled dynamically based on clicked monument -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
