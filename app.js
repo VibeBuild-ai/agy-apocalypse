@@ -90,10 +90,10 @@ window.addEventListener('DOMContentLoaded', () => {
 function init3D() {
   const container = document.getElementById('canvas-container');
   
-  // Scene setup with a brighter, dusty apocalyptic sky and realistic fog
+  // Scene setup with a bright daylight sky and light atmospheric haze
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x352d26); // Lighter, dusty warm-grey sky background
-  scene.fog = new THREE.FogExp2(0x352d26, 0.015); // Realistic overcast nuclear winter fog (density 0.015)
+  scene.background = new THREE.Color(0xaed8f2); // Bright sky blue background
+  scene.fog = new THREE.FogExp2(0xaed8f2, 0.004); // Faint realistic atmospheric haze
 
   // Camera setup
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -292,7 +292,7 @@ function createEnvironment() {
       // Broad ambient sky glow
       float sunBloom = pow(sunInfluence, 2.5) * 0.1;
       
-      vec3 sunColor = vec3(0.95, 0.55, 0.25); // pale warm orange/gold sun
+      vec3 sunColor = vec3(1.0, 0.95, 0.85); // bright golden sun light
       vec3 finalColor = skyColor + sunColor * (sunDisk + sunHalo + sunBloom);
       
       gl_FragColor = vec4(finalColor, 1.0);
@@ -304,8 +304,8 @@ function createEnvironment() {
     vertexShader: skyVertexShader,
     fragmentShader: skyFragmentShader,
     uniforms: {
-      topColor: { value: new THREE.Color(0x221d1a) },      // Soft dark-grey/brown zenith
-      bottomColor: { value: new THREE.Color(0x5a483e) },   // Warm amber/grey horizon
+      topColor: { value: new THREE.Color(0x1a82e2) },      // Bright deep blue sky zenith
+      bottomColor: { value: new THREE.Color(0xaed8f2) },   // Pale blue horizon
       offset: { value: 25.0 },
       exponent: { value: 0.6 },
       sunPosition: { value: new THREE.Vector3(60, 120, 30) }
@@ -327,16 +327,16 @@ function createEnvironment() {
   scene.environment = envCube.texture;
   pmremGenerator.dispose();
 
-  // 2. Volumetric Dust Sunbeams (Faint reddish-orange shafts)
+  // 2. Volumetric Dust Sunbeams (Bright golden daylight shafts)
   const beamDir = new THREE.Vector3(-60, -120, -30).normalize();
   const up = new THREE.Vector3(0, 1, 0);
   const beamQuaternion = new THREE.Quaternion().setFromUnitVectors(up, beamDir);
 
   const beamGeo = new THREE.CylinderGeometry(2, 15, 180, 16, 1, true);
   const beamMat = new THREE.MeshBasicMaterial({
-    color: 0xcc4422,
+    color: 0xfff2cc,
     transparent: true,
-    opacity: 0.015, // very dusty, dim haze
+    opacity: 0.045, // visible golden beams in daylight
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
     depthWrite: false
@@ -356,16 +356,16 @@ function createEnvironment() {
     scene.add(beam);
   });
 
-  // 3. Dim Red Sun Sprite in 3D (Adds nuclearly overcast sun glare)
+  // 3. Bright Sun Sprite in 3D (Creates a prominent, glaring sun core)
   const sunGlowCanvas = document.createElement('canvas');
   sunGlowCanvas.width = 128;
   sunGlowCanvas.height = 128;
   const sunGlowCtx = sunGlowCanvas.getContext('2d');
   const sunGlowGrad = sunGlowCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  sunGlowGrad.addColorStop(0, 'rgba(255, 100, 50, 0.7)');
-  sunGlowGrad.addColorStop(0.2, 'rgba(255, 70, 30, 0.35)');
-  sunGlowGrad.addColorStop(0.5, 'rgba(200, 40, 10, 0.15)');
-  sunGlowGrad.addColorStop(0.8, 'rgba(150, 20, 0, 0.02)');
+  sunGlowGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)'); // Pure white core
+  sunGlowGrad.addColorStop(0.15, 'rgba(255, 250, 220, 0.95)');
+  sunGlowGrad.addColorStop(0.45, 'rgba(255, 225, 130, 0.5)'); // Golden corona
+  sunGlowGrad.addColorStop(0.75, 'rgba(255, 160, 50, 0.1)');
   sunGlowGrad.addColorStop(1.0, 'rgba(0, 0, 0, 0.0)');
   sunGlowCtx.fillStyle = sunGlowGrad;
   sunGlowCtx.fillRect(0, 0, 128, 128);
@@ -373,24 +373,24 @@ function createEnvironment() {
   const sunGlowTexture = new THREE.CanvasTexture(sunGlowCanvas);
   const sunSpriteMat = new THREE.SpriteMaterial({
     map: sunGlowTexture,
-    color: 0xe05a36, // brighter orange-red sun color
+    color: 0xfffcd6, // bright warm white/yellow sun color
     transparent: true,
-    opacity: 0.65, // slightly more intense
+    opacity: 0.95, // high opacity for a visible sun
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
   const sunSprite = new THREE.Sprite(sunSpriteMat);
   const sunDirVec = new THREE.Vector3(60, 120, 30).normalize();
   sunSprite.position.copy(sunDirVec).multiplyScalar(500); // place deep in sky
-  sunSprite.scale.set(150, 150, 1);
+  sunSprite.scale.set(130, 130, 1);
   scene.add(sunSprite);
 
-  // 4. Hemisphere Ambient Light (Realistic Steel-Grey sky to Warm Soil bounce)
-  const ambientLight = new THREE.HemisphereLight(0x505b6b, 0x302822, 0.75); // Increased to 0.75 for realistic, bright ambient fills
+  // 4. Hemisphere Ambient Light (Bright Sky-Blue to Warm Ground bounce)
+  const ambientLight = new THREE.HemisphereLight(0xcfe4ff, 0xe0dbd3, 1.2); // Bright daylight ambient fills (1.2 intensity)
   scene.add(ambientLight);
 
-  // 5. Overcast Sun Directional Light (Bright warm amber shadows)
-  const dirLight = new THREE.DirectionalLight(0xe5aa7a, 1.3); // Warm amber sunlight, increased to 1.3
+  // 5. Bright Direct Sunlight (Directional Light with sharp shadows)
+  const dirLight = new THREE.DirectionalLight(0xfff6e0, 3.2); // Powerful sunlight (3.2 intensity)
   dirLight.position.set(60, 120, 30);
   dirLight.castShadow = true;
   dirLight.shadow.mapSize.width = 2048;
@@ -431,10 +431,10 @@ function createEnvironment() {
   // 7. Ground Plane with Cracked, Dusty Dark PBR Asphalt Material
   const floorGeo = new THREE.PlaneGeometry(1200, 1200);
   const floorMat = new THREE.MeshStandardMaterial({
-    color: 0x2b2b2f,            // Lighter, realistic warm slate gray
+    color: 0x3d3d44,            // Lighter, dry concrete/asphalt pavement under direct sun
     map: colorMap,
     bumpMap: bumpMap,
-    bumpScale: 0.1,             // subtle, realistic crack depth (less harsh shadows)
+    bumpScale: 0.08,            // subtle crack bump height
     roughnessMap: roughnessMap,
     roughness: 0.8,             // matte dust feel
     metalness: 0.05,            // non-metallic dirt/ash
