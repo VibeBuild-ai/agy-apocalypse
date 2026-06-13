@@ -88,11 +88,11 @@
       position: fixed;
       width: 100%;
       height: 100%;
-      background-color: rgba(5, 5, 8, 0.9);
+      background-color: rgba(5, 5, 8, 0.95);
       backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      display: block; /* use block instead of flex to allow natural scrolling on short viewports */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       z-index: 20;
       transition: opacity 0.5s ease;
     }
@@ -101,9 +101,11 @@
       background: var(--bg-obsidian-solid);
       border: 1px solid var(--border-cyan);
       border-radius: 16px;
-      padding: 3rem;
+      padding: 2.5rem 2rem;
       text-align: center;
-      max-width: 600px;
+      width: 92%;
+      max-width: 580px;
+      margin: 40px auto; /* Centers card and leaves top/bottom space for scrolling */
       box-shadow: var(--box-glow);
       cursor: pointer;
       transition: all 0.3s ease;
@@ -456,6 +458,7 @@
         padding: 1.5rem !important;
         width: 90% !important;
         max-width: 380px !important;
+        margin: 20px auto !important; /* closer top/bottom spacing on mobile viewports */
       }
     }
 
