@@ -451,6 +451,30 @@
       #hud-bottom {
         display: none !important; /* Hide keyboard help on mobile */
       }
+      #hud-top-left {
+        display: none !important; /* Hide decorative left HUD on mobile */
+      }
+      #hud-top-right .hud-title,
+      #hud-top-right .hud-text:not(#hud-nodes) {
+        display: none !important; /* Hide diagnostics title and stats */
+      }
+      #hud-top-right .hud-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 4px 8px !important;
+      }
+      #hud-nodes {
+        font-size: 0.75rem !important;
+        background: rgba(13, 14, 18, 0.85);
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border-cyan);
+        display: inline-block;
+      }
+      #crosshair {
+        display: none !important; /* Hide crosshair dot on mobile touch devices */
+      }
       #proximity-hud {
         bottom: 8.5rem !important; /* Lift proximity card above controls */
       }
