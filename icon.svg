@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#141829" />
+      <stop offset="100%" stop-color="#05070f" />
+    </radialGradient>
+    <linearGradient id="cyberCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" />
+    </linearGradient>
+    <linearGradient id="neonPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b152ff" />
+      <stop offset="100%" stop-color="#ff0844" />
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bgGlow)" stroke="url(#cyberCyan)" stroke-width="6" />
+  
+  <!-- Outer glowing ring -->
+  <circle cx="256" cy="256" r="170" fill="none" stroke="url(#cyberCyan)" stroke-width="12" filter="url(#neonGlow)" stroke-dasharray="8 6" />
+  
+  <!-- Inner cyber steering wheel / HUD element -->
+  <circle cx="256" cy="256" r="110" fill="none" stroke="url(#neonPurple)" stroke-width="8" filter="url(#neonGlow)" />
+  
+  <!-- Spokes / Cyber Crosshair -->
+  <path d="M 256 60 L 256 120 M 256 392 L 256 452 M 60 256 L 120 256 M 392 256 L 452 256" stroke="url(#cyberCyan)" stroke-width="8" stroke-linecap="round" filter="url(#neonGlow)" />
+  
+  <!-- Core Triangle (Cyberpunk Arrow / Player Car indicator) -->
+  <polygon points="256,190 310,290 256,265 202,290" fill="url(#cyberCyan)" filter="url(#neonGlow)" />
+</svg>

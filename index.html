@@ -6,6 +6,13 @@
   <meta name="description" content="Antigravity CLI - Immersive 3D Walkable Landing Page. Erkunde die Features in einer dreidimensionalen digitalen Welt.">
   <title>Antigravity CLI - 3D Walkable Universe</title>
   
+  <!-- PWA Support -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00f2fe">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon.svg">
+  
   <!-- Poppins & Roboto Mono Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -446,5 +453,16 @@
   
   <!-- App JS -->
   <script src="app.js"></script>
+
+  <!-- Service Worker Registration for PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+  </script>
 </body>
 </html>
